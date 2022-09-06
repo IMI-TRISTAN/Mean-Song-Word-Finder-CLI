@@ -59,13 +59,13 @@ class CalculateSongWordAverage:
     def __init__(self, artist_name):
          musicbrainzngs.set_useragent(
             "CalculateSongWordAverage", "1.0", contact="s.shillitoe1@ntlworld.com")
-         self.setup_music_genius_lyric_finder()
-         self.artist_name = artist_name
-         self.song_list = []
-         self.list_song_word_count = []
+         self._setup_music_genius_lyric_finder()
+         self._artist_name = artist_name
+         self._song_list = []
+         self._list_song_word_count = []
 
 
-    def setup_music_genius_lyric_finder(self):
+    def _setup_music_genius_lyric_finder(self):
         """
         This function configures how lyrics are returned by lyricsgenius
         """
@@ -81,7 +81,7 @@ class CalculateSongWordAverage:
             print('Error in function CalculateSongWordAverage.setup_music_genius_lyric_finder: ' + str(e))
 
 
-    def get_song_list(self):
+    def _get_song_list(self):
         """
         This function uses musicbrianzngs to get a list of songs
         by an artist.
@@ -97,7 +97,7 @@ class CalculateSongWordAverage:
           
             while True:
                 song_result = musicbrainzngs.search_recordings(
-                    artistname=self.artist_name, 
+                    artistname=self._artist_name, 
                     limit=limit, offset=offset, strict=True)
             
                 if song_result:
@@ -108,7 +108,7 @@ class CalculateSongWordAverage:
                         #using a regular expression
                         song_title = re.sub("[\(\[].*?[\)\]]", "", song_title)
                         song_title = song_title.strip().lower()
-                        self.song_list.append(song_title)
+                        self._song_list.append(song_title)
                     #increment the offset to get the next 100 song titles
                     offset += limit
                 
@@ -118,30 +118,33 @@ class CalculateSongWordAverage:
                     break
             
             #Remove duplicates from the list
-            self.song_list = list(dict.fromkeys(self.song_list))
+            self._song_list = list(dict.fromkeys(self._song_list))
 
-            if len(self.song_list) == 0:
+            if len(self._song_list) == 0:
                 print("No song titles found for {}".format(
-                                self.artist_name))
+                                self._artist_name))
             else:
                 print("Song list search finished")
         except Exception as e:
-            print('Error in function CalculateSongWordAverage.get_song_list: ' + str(e))
+            print('Error in function CalculateSongWordAverage._get_song_list: ' + str(e))
     
     
     def find_artist_song_word_average(self):
-        self.get_song_list()
-        self.calculate_song_word_average()
+        """
+        Public function that calculates the number of words in a song by an artist
+        """
+        self._get_song_list()
+        self._calculate_song_word_average()
 
 
-    def calculate_list_average(self, list_song_words):
+    def _calculate_list_average(self, list_song_words):
         if list_song_words is not None:
             return int(sum(list_song_words) / len(list_song_words))
         else:
             return 0
 
 
-    def calculate_song_word_average(self):
+    def _calculate_song_word_average(self):
         """
         This function finds the number of words in a song and adds that number to 
         a list.
@@ -149,21 +152,21 @@ class CalculateSongWordAverage:
         This list is then used to calculate the number of words in a song by the artist.
         """
         try:
-           for song_title in self.song_list:
-                number_words = self.get_number_words_in_one_song(song_title)
+           for song_title in self._song_list:
+                number_words = self._get_number_words_in_one_song(song_title)
                 print("Processed {} which has {} words".format(song_title, number_words))
-                self.list_song_word_count.append(number_words)
+                self._list_song_word_count.append(number_words)
 
-           if len(self.list_song_word_count):
-                averageNumberWords = self.calculate_list_average(self.list_song_word_count)
-                print("The average number of words in a song by {} is {}".format(self.artist_name, averageNumberWords))
+           if len(self._list_song_word_count):
+                averageNumberWords = self._calculate_list_average(self._list_song_word_count)
+                print("The average number of words in a song by {} is {}".format(self._artist_name, averageNumberWords))
            else:
-                print("Could not calculated the average number of words in a song by {}".format(self.artist_name))
+                print("Could not calculated the average number of words in a song by {}".format(self._artist_name))
         except Exception as e:
-            print('Error in function CalculateSongWordAverage.calculate_song_word_average: ' + str(e))
+            print('Error in function CalculateSongWordAverage._calculate_song_word_average: ' + str(e))
 
 
-    def word_count(self, lyrics=None):
+    def _word_count(self, lyrics=None):
         """Returns the number of words in a song."""
         try:
             if lyrics is not None:
@@ -172,27 +175,27 @@ class CalculateSongWordAverage:
             else:
                 return 0
         except Exception as e:
-            print('Error in function CalculateSongWordAverage.word_count when lyrics={}: '.format(lyrics) + str(e))
+            print('Error in function CalculateSongWordAverage._word_count when lyrics={}: '.format(lyrics) + str(e))
 
 
-    def get_number_words_in_one_song(self, song_title):
+    def _get_number_words_in_one_song(self, song_title):
         """
         This function finds the number of words in a song whose
         title is song_title.
         """
         try:
             #search for the song
-            song = self.music_genius.search_song(song_title, self.artist_name)
+            song = self.music_genius.search_song(song_title, self._artist_name)
             if song:
                 if song.lyrics is not None:
-                    return self.word_count(song.lyrics)
+                    return self._word_count(song.lyrics)
             else:
                 return 0  
         except ConnectionError as ce:
-            print('Connection Error in function CalculateSongWordAverage.get_number_words_in_one_song with song title {}: '.format(song_title) + str(ce))
+            print('Connection Error in function CalculateSongWordAverage._get_number_words_in_one_song with song title {}: '.format(song_title) + str(ce))
             return 0
         except Exception as e:
-            print('Error in function CalculateSongWordAverage.get_number_words_in_one_song with song title {}: '.format(song_title) + str(e))    
+            print('Error in function CalculateSongWordAverage._get_number_words_in_one_song with song title {}: '.format(song_title) + str(e))    
             return 0
            
 
