@@ -5,7 +5,7 @@ The calculation of the average number of words in an artist's song can be length
 
 
 ## How to use
-1. Download the files avgWordsSong.py and requirements.txt to a folder on your computer.  The name of the folder must contain no spaces.
+1. Download the files avgWordsSong.py and requirements.txt to a folder on your computer.  **The name of the folder must contain no spaces**.
 2. To run the application, put your computer online and open a command prompt in the folder created in step 1.
 3. At the command prompt type 
 4. 
@@ -19,7 +19,7 @@ Or
 
     python avgWordsSong.py "The Who"
     
-Note, artist names with spaces in them must be enclosed by double quotes " "
+Note, **artist names with spaces in them must be enclosed by double quotes " "**
 
 ## Automated Testing
 The tests in test in test.py are not exhaustive.  Full coverage would require the construction of sets of song data with known numbers of words in them, which is outside the scope of this project.  This repository has continuous integration set up.
