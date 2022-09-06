@@ -1,3 +1,12 @@
+"""
+This module contains a class for the calculation of the average number of words
+in a song by a particular artist.
+
+It uses the package musicbrainzngs to get a list of the songs of a particular artist.
+It uses the package lyricsgenius to a get the lyrics of each song in the above list.
+
+It runs in a CLI 
+"""
 import venv
 import argparse
 import re
@@ -31,6 +40,7 @@ def install():
 
 
 def cleanup():
+    """Remove virtual environment"""
     print("Cleaning up...")
     windows = (sys.platform == "win32") or (sys.platform == "win64") or (os.name == 'nt')
     if windows:
@@ -42,6 +52,10 @@ def cleanup():
 
 
 class CalculateSongWordAverage:
+    """
+    A class for the calculation of the average number of words
+    in a song by a particular artist.
+    """
     def __init__(self, artist_name):
          musicbrainzngs.set_useragent(
             "CalculateSongWordAverage", "1.0", contact="s.shillitoe1@ntlworld.com")
@@ -52,9 +66,14 @@ class CalculateSongWordAverage:
 
 
     def setup_music_genius_lyric_finder(self):
+        """
+        This function configures how lyrics are returned by lyricsgenius
+        """
         try:
             self.music_genius = lyricsgenius.Genius(LYRICS_GENIUS_ACCESS_TOKEN)
-            self.music_genius.remove_section_headers = True # Remove section headers (e.g. [Chorus]) from lyrics when searching
+            # Remove section headers (e.g. [Chorus]) from lyrics when searching
+            self.music_genius.remove_section_headers = True
+            # Ignore things like interviews & film appearances
             self.music_genius.skip_non_songs = True
             self.music_genius.excluded_terms = ["(Remix)", "(Live)", "(remix)", 
                                                 "(live)", "edit", "(demo)" , "(mix)"]
@@ -63,6 +82,15 @@ class CalculateSongWordAverage:
 
 
     def get_song_list(self):
+        """
+        This function uses musicbrianzngs to get a list of songs
+        by an artist.
+
+        Song titles are cleaned up to remove [] and () and their
+        enclosed text from the title.
+
+        Duplicate song titles are also removed from the list
+        """
         try:
             offset = 0
             limit = 100
@@ -114,7 +142,12 @@ class CalculateSongWordAverage:
 
 
     def calculate_song_word_average(self):
-        """ """
+        """
+        This function finds the number of words in a song and adds that number to 
+        a list.
+
+        This list is then used to calculate the number of words in a song by the artist.
+        """
         try:
            for song_title in self.song_list:
                 number_words = self.get_number_words_in_one_song(song_title)
@@ -143,6 +176,10 @@ class CalculateSongWordAverage:
 
 
     def get_number_words_in_one_song(self, song_title):
+        """
+        This function finds the number of words in a song whose
+        title is song_title.
+        """
         try:
             #search for the song
             song = self.music_genius.search_song(song_title, self.artist_name)
@@ -151,30 +188,35 @@ class CalculateSongWordAverage:
                     return self.word_count(song.lyrics)
             else:
                 return 0  
+        except ConnectionError as ce:
+            print('Connection Error in function CalculateSongWordAverage.get_number_words_in_one_song with song title {}: '.format(song_title) + str(ce))
+            return 0
         except Exception as e:
             print('Error in function CalculateSongWordAverage.get_number_words_in_one_song with song title {}: '.format(song_title) + str(e))    
             return 0
            
 
 if __name__ == '__main__':
+    #Install dependencies.
     install()
     import musicbrainzngs
     import lyricsgenius
 
     # Create the parser
-    my_parser = argparse.ArgumentParser(prog='avgWordsSong',
+    artist_parser = argparse.ArgumentParser(prog='avgWordsSong',
                                         description='Calculates the average number of words in an artist\'s songs',
                                         )
 
     # Add the arguments
-    my_parser.add_argument('Artist', type=str,
-                           help='The name of the artist(s) whose average number of words in their songs you wish to find')
+    artist_parser.add_argument('Artist', type=str,
+                          help='The name of the artist(s) whose average number of words in their songs you wish to find')
 
-    args = my_parser.parse_args()
+    args = artist_parser.parse_args()
 
     artist_name = args.Artist
     print("Finding the average number of words in a song by {}".format(artist_name))
     calcSongWordAvgforArtist = CalculateSongWordAverage(artist_name)
     calcSongWordAvgforArtist.find_artist_song_word_average()
 
+    #Remove virtual environment created above
     cleanup()
