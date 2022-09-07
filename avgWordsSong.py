@@ -200,11 +200,6 @@ class CalculateSongWordAverage:
            
 
 if __name__ == '__main__':
-    #Install dependencies.
-    install()
-    import musicbrainzngs
-    import lyricsgenius
-
     # Create the parser
     artist_parser = argparse.ArgumentParser(prog='avgWordsSong',
                                         description='Calculates the average number of words in an artist\'s songs',
@@ -217,9 +212,17 @@ if __name__ == '__main__':
     args = artist_parser.parse_args()
 
     artist_name = args.Artist
+   
+    #Install dependencies.
+    install()
+    import musicbrainzngs
+    import lyricsgenius
+
+    
     print("Finding the average number of words in a song by {}".format(artist_name))
     calcSongWordAvgforArtist = CalculateSongWordAverage(artist_name)
     calcSongWordAvgforArtist.find_artist_song_word_average()
 
     #Remove virtual environment created above
     cleanup()
+    
