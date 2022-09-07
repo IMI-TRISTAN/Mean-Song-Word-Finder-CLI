@@ -1,6 +1,8 @@
 # Mean_Song_Word_Finder_CLI
 The file avgWordsSong.py contains an application that when passed the name of an artist, calculates the average number of words in one of their songs.  It has a Command Line Interface.  When avgWordsSong.py is run, it creates a virtual environment on your computer and installs all the packages used by this application.  Upon completion of the calculation, the virtual environment is removed. 
 
+After the user inputs the name of an artist, it uses the MusicBrainzngs API to retrieve the song list for that artist. It then uses the LyricsGenius API to retrieve the lyrics for each song in the song list. The number of words in each song is counted and used to calculate the word average for a song by the artist.
+
 The calculation of the average number of words in an artist's song can be lengthy.  So the progress of the calculation is printed on the command prompt screen as the calculation progresses. 
 
 
