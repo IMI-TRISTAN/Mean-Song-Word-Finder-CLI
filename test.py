@@ -1,3 +1,4 @@
+import requests
 import unittest
 from avgWordsSong import CalculateSongWordAverage as clsAvg
 
