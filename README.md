@@ -9,7 +9,7 @@ The calculation of the average number of words in an artist's song can be length
 ## How to use
 1. Make sure you have Python 3.9 installed on your computer.
 2. Download the files avgWordsSong.py and requirements.txt to a folder on your computer.  **The name of the folder must contain no spaces**.
-2. To run the application, put your computer online and open a command prompt in the folder created in step 1.
+2. To run the application, put your computer online and open a command prompt in the folder created in step 2.
 3. At the command prompt type 
 4. 
     python avgWordsSong.py <artist's name>
@@ -20,7 +20,7 @@ For example
     
 Or
 
-    python avgWordsSong.py "The Who"
+    python avgWordsSong.py "The Jame"
     
 Note, **artist names with spaces in them must be enclosed by double quotes " "**
 
