@@ -3,10 +3,12 @@ This module contains a class for the calculation of the average number of words
 in a song by a particular artist.
 
 It uses the package musicbrainzngs to get a list of the songs of a particular artist.
-It uses the package lyricsgenius to a get the lyrics of each song in the above list.
+It uses the ChartLyrics Lyric API to get the lyrics of each song in the above list.
 
 It runs in a CLI 
 """
+import requests
+import xml.etree.ElementTree as ET
 import venv
 import argparse
 import re
@@ -16,8 +18,6 @@ import sys
 __app_name__ = "avgWordsSong"
 __version__ = "0.1.0"
 
-#constant
-LYRICS_GENIUS_ACCESS_TOKEN = "Xggm2iesVVTObjSTWDUIVfWoyGhftueOxOowgkCR5LKRyYS8Ml9K8oam4zBM3sR7"
 
 def activate():
     """Active virtual environment"""
@@ -59,26 +59,9 @@ class CalculateSongWordAverage:
     def __init__(self, artist_name):
          musicbrainzngs.set_useragent(
             "CalculateSongWordAverage", "1.0", contact="s.shillitoe1@ntlworld.com")
-         self._setup_music_genius_lyric_finder()
          self._artist_name = artist_name
          self._song_list = []
          self._list_song_word_count = []
-
-
-    def _setup_music_genius_lyric_finder(self):
-        """
-        This function configures how lyrics are returned by lyricsgenius
-        """
-        try:
-            self.music_genius = lyricsgenius.Genius(LYRICS_GENIUS_ACCESS_TOKEN)
-            # Remove section headers (e.g. [Chorus]) from lyrics when searching
-            self.music_genius.remove_section_headers = True
-            # Ignore things like interviews & film appearances
-            self.music_genius.skip_non_songs = True
-            self.music_genius.excluded_terms = ["(Remix)", "(Live)", "(remix)", 
-                                                "(live)", "edit", "(demo)" , "(mix)"]
-        except Exception as e:
-            print('Error in function CalculateSongWordAverage.setup_music_genius_lyric_finder: ' + str(e))
 
 
     def _get_song_list(self):
@@ -87,7 +70,7 @@ class CalculateSongWordAverage:
         by an artist.
 
         Song titles are cleaned up to remove [] and () and their
-        enclosed text from the title.
+        enclosed text from the title. Punctuation is also removed.
 
         Duplicate song titles are also removed from the list
         """
@@ -107,14 +90,17 @@ class CalculateSongWordAverage:
                         #remove [] and () and their enclosed text from song title
                         #using a regular expression
                         song_title = re.sub("[\(\[].*?[\)\]]", "", song_title)
+                        #remove punctation and new lines from title
+                        song_title = re.sub(r'[^\w\s]','', song_title.replace('\n', " "))
+                        #remove leading and trailing white space & convert to lower case
                         song_title = song_title.strip().lower()
                         self._song_list.append(song_title)
                     #increment the offset to get the next 100 song titles
                     offset += limit
                 
                 #Stop the while loop when there are no more songs to retrieve or
-                #after 3 iterations.
-                if len(song_result["recording-list"]) == 0 or offset > 300:
+                #after 4 iterations.
+                if len(song_result["recording-list"]) == 0 or offset > 400:
                     break
             
             #Remove duplicates from the list
@@ -170,12 +156,39 @@ class CalculateSongWordAverage:
         """Returns the number of words in a song."""
         try:
             if lyrics is not None:
-                word_list = lyrics.split()
+                word_list = lyrics.split(" ")
                 return len(word_list)
             else:
                 return 0
         except Exception as e:
             print('Error in function CalculateSongWordAverage._word_count when lyrics={}: '.format(lyrics) + str(e))
+
+
+    def _get_song_lyrics(self, song_title):
+        """
+        This function uses the chartlyrics.com webservice to get the lyrics of a song 
+        with the title, song_title.
+
+        This webservice returns the song data in XML format
+        """
+        try:
+            url = 'http://api.chartlyrics.com/apiv1.asmx/SearchLyricDirect?artist=' \
+                + self._artist_name + '&' + 'song=' + song_title
+
+            response = requests.get(url)
+
+            root = ET.fromstring(response.content)
+            lyrics = root.find('{http://api.chartlyrics.com/}Lyric').text
+            if lyrics:
+                #Prepare lyrics for analysis by removing punctuation & replacing newlines
+                cleaned_lyrics = re.sub(r'[^\w\s]','', lyrics.replace('\n', " "))
+                return cleaned_lyrics
+            else:
+                return ''
+        except Exception as e:
+            print('Error in function CalculateSongWordAverage._get_song_lyrics with song title {}: '.format(song_title) + str(e))    
+            print('The contents of the response are: ', response.content)
+            return ''
 
 
     def _get_number_words_in_one_song(self, song_title):
@@ -184,16 +197,12 @@ class CalculateSongWordAverage:
         title is song_title.
         """
         try:
-            #search for the song
-            song = self.music_genius.search_song(song_title, self._artist_name)
-            if song:
-                if song.lyrics is not None:
-                    return self._word_count(song.lyrics)
+            #search for the song lyrics
+            lyrics = self._get_song_lyrics(song_title)
+            if lyrics:
+                return self._word_count(lyrics)
             else:
                 return 0  
-        except ConnectionError as ce:
-            print('Connection Error in function CalculateSongWordAverage._get_number_words_in_one_song with song title {}: '.format(song_title) + str(ce))
-            return 0
         except Exception as e:
             print('Error in function CalculateSongWordAverage._get_number_words_in_one_song with song title {}: '.format(song_title) + str(e))    
             return 0
@@ -216,8 +225,6 @@ if __name__ == '__main__':
     #Install dependencies.
     install()
     import musicbrainzngs
-    import lyricsgenius
-
     
     print("Finding the average number of words in a song by {}".format(artist_name))
     calcSongWordAvgforArtist = CalculateSongWordAverage(artist_name)
